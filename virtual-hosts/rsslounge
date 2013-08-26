@@ -1,0 +1,28 @@
+server {
+	server_name 	rsslounge.domain.tld;
+	root		/var/www/rsslounge;
+	index 		index.php;
+
+	location / {
+		autoindex off;
+		try_files $uri $uri/ @rewrites;
+	}
+
+	location @rewrites {
+		rewrite ^(.*)$ /index.php?$1 last;
+	}
+
+	rewrite ^/favicon.ico$ /public/favicon.ico;
+	rewrite ^/plugins/([^/]+)/(.*)$ /plugins/$1/public/$2;
+	rewrite ^/favicons/(.*)$ /data/favicons/$1;
+	rewrite ^/thumbnails/(.*)$ /data/thumbnails/$1;
+	rewrite ^/javascript/(.*)$ /public/javascript/$1;
+	rewrite ^/stylesheets/(.*)$ /public/stylesheets/$1;
+
+	location ~ \.php$ {
+		include /etc/nginx/fastcgi_params;
+		fastcgi_pass unix:/var/run/php5-fpm.sock;
+		fastcgi_param QUERY_STRING mod_rewrite=1&$query_string;
+		fastcgi_index index.php;
+	}
+}

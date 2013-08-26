@@ -1,0 +1,24 @@
+server {
+    server_name     git.domain.tld;
+
+    index           gitweb.cgi;
+    root            /var/www/gitweb;
+
+    auth_basic "Restricted area";
+    auth_basic_user_file /etc/nginx/passwd;
+
+    location ~ \.cgi$ {
+	gzip off;
+	include fastcgi_params;
+	fastcgi_pass  unix:/var/run/fcgiwrap.socket;
+	fastcgi_index gitweb.cgi;
+	fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+	fastcgi_param GITWEB_CONFIG /etc/gitweb.conf;
+    }
+}
+
+server {
+  listen          8082;
+  server_name     git.domain.tld;
+  root            /home/git/public;
+}

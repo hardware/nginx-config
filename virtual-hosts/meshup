@@ -1,0 +1,197 @@
+# #############################
+# ###### Production [FR] ######
+# #############################
+server {    
+    server_name     www.domain.tld domain.tld;
+    root            /var/www/meshup/web;
+    charset         utf-8;
+    index           index.php;
+    access_log      off;
+
+    auth_basic "Site en developpement";
+    auth_basic_user_file /etc/nginx/passwd;
+
+    location ~ (signup/?|login/?|password/reset/?|activation/sendmail/?)$ {
+        rewrite ^ https://domain.tld$request_uri permanent;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.php;
+    }
+
+    location ~* \.php$ {
+        try_files     $uri =404;
+        include       /etc/nginx/fastcgi_params;
+	fastcgi_pass  unix:/var/run/php5-fpm.sock;
+        fastcgi_index index.php;
+    }
+
+    location /nginx_status {
+        stub_status on;
+        access_log  off;
+    }
+
+    include /etc/nginx/conf.d/optimization.conf;
+}
+
+server {
+    listen 4443;
+
+    ssl on;
+    ssl_certificate /etc/nginx/ssl/meshup/domain.tld.crt;
+    ssl_certificate_key /etc/nginx/ssl/meshup/domain.tld.key;
+    ssl_ciphers RC4:HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;   
+    ssl_session_cache shared:SSL:1m;
+    ssl_session_timeout 10m;    
+    ssl_protocols SSLv3 TLSv1 TLSv1.1 TLSv1.2;  
+
+    server_name     www.domain.tld domain.tld;
+    root            /var/www/meshup/web;
+    charset         utf-8;
+    index           index.php;
+    access_log      off;
+
+    auth_basic "Site en developpement";
+    auth_basic_user_file /etc/nginx/passwd;
+
+    location / {
+        try_files $uri $uri/ /index.php;
+    }
+
+    location ~* \.php$ {
+        try_files     $uri =404;
+        include       /etc/nginx/fastcgi_params;
+	fastcgi_pass  unix:/var/run/php5-fpm.sock;
+        fastcgi_index index.php;
+        fastcgi_param CI_PROTOCOL https;
+    }
+
+    include /etc/nginx/conf.d/optimization.conf;
+}
+
+# #############################
+# ###### Production [EN] ######
+# #############################
+server {    
+    server_name     en.domain.tld;
+    root            /var/www/meshup/web;
+    charset         utf-8;
+    index           index.php;
+    access_log      off;
+
+    location ~ (signup/?|login/?|password/reset/?|activation/sendmail/?)$ {
+        rewrite ^ https://en.domain.tld$request_uri permanent;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.php;
+    }
+
+    location ~* \.php$ {
+        try_files     $uri =404;
+        include       /etc/nginx/fastcgi_params;
+	fastcgi_pass  unix:/var/run/php5-fpm.sock;
+        fastcgi_index index.php;
+        fastcgi_param CI_LANG en;
+    }
+
+    include /etc/nginx/conf.d/optimization.conf;
+}
+
+server {
+    listen 4443;
+
+    ssl on;
+    ssl_certificate /etc/nginx/ssl/meshup/domain.tld.crt;
+    ssl_certificate_key /etc/nginx/ssl/meshup/domain.tld.key;
+    ssl_ciphers RC4:HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;   
+    ssl_session_cache shared:SSL:1m;
+    ssl_session_timeout 10m;    
+    ssl_protocols SSLv3 TLSv1 TLSv1.1 TLSv1.2;
+
+    server_name     en.domain.tld;
+    root            /var/www/meshup/web;
+    charset         utf-8;
+    index           index.php;
+    access_log      off;
+
+    location / {
+        try_files $uri $uri/ /index.php;
+    }
+
+    location ~* \.php$ {
+        try_files     $uri =404;
+        include       /etc/nginx/fastcgi_params;
+	fastcgi_pass  unix:/var/run/php5-fpm.sock;
+        fastcgi_index index.php;
+        fastcgi_param CI_LANG en;
+        fastcgi_param CI_PROTOCOL https;
+    }
+
+    include /etc/nginx/conf.d/optimization.conf;
+}
+
+# ##############################
+# ###### Development [FR] ######
+# ##############################
+server {    
+    server_name     dev.domain.tld;
+    root            /var/www/dev/meshup/web;
+    charset         utf-8;
+    index           index.php;
+    access_log      off;
+
+    location / {
+        try_files $uri $uri/ /index.php;
+    }
+
+    location ~* \.php$ {
+        try_files     $uri =404;
+        include       /etc/nginx/fastcgi_params;
+	fastcgi_pass  unix:/var/run/php5-fpm.sock;
+        fastcgi_index index.php;
+        fastcgi_param CI_ENV testing;
+    }
+}
+
+# ##############################
+# ###### Development [EN] ######
+# ##############################
+
+server {    
+    server_name     en.dev.domain.tld;
+    root            /var/www/dev/meshup/web;
+    charset         utf-8;
+    index           index.php;
+    access_log      off;
+
+    location / {
+        try_files $uri $uri/ /index.php;
+    }
+
+    location ~* \.php$ {
+        try_files     $uri =404;
+        include       /etc/nginx/fastcgi_params;
+	fastcgi_pass  unix:/var/run/php5-fpm.sock;
+        fastcgi_index index.php;
+        fastcgi_param CI_ENV testing;
+        fastcgi_param CI_LANG en;
+    }
+}
+
+# #################
+# ###### API ######
+# #################
+server {
+    server_name     api.domain.tld;
+    root            /var/www/dev/meshup/api;
+    index           index.html;
+    charset         utf-8;
+}
+
+# Varnish config
+# listen 127.0.0.1:8080;
+# set_real_ip_from   127.0.0.1;
+# real_ip_header     X-Forwarded-For;
