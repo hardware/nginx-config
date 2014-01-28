@@ -1,0 +1,65 @@
+server {
+
+  listen 80;
+  server_name owncloud.domain.tld;
+  return 301 https://$server_name$request_uri; # enforce https
+
+}
+
+server {
+
+  listen       443 ssl;
+  server_name  owncloud.domain.tld;
+  root         /srv/http/www/owncloud;
+  index        index.php;
+  charset      utf-8;
+
+  ## SSL settings
+  ssl_certificate           /etc/nginx/ssl/ecdsa/ssl.crt;
+  ssl_certificate_key       /etc/nginx/ssl/ecdsa/ssl.key;
+  ssl_protocols             TLSv1.2;
+  ssl_ciphers               "EECDH+ECDSA+AESGCM:EECDH+aRSA+AESGCM:!aNULL:!eNULL:!LOW:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS:!RC4";
+  ssl_prefer_server_ciphers on;
+  ssl_session_cache         shared:SSL:10m;
+  ssl_session_timeout       10m;
+  ssl_ecdh_curve            secp521r1;
+
+  add_header Strict-Transport-Security max-age=31536000;
+
+  #  auth_basic "Restricted area";
+  #  auth_basic_user_file /etc/nginx/passwd;
+
+  client_max_body_size 1G;
+  fastcgi_buffers 64 4K;
+
+  rewrite ^/caldav(.*)$  /remote.php/caldav$1 redirect;
+  rewrite ^/carddav(.*)$ /remote.php/carddav$1 redirect;
+  rewrite ^/webdav(.*)$  /remote.php/webdav$1 redirect;
+
+  location ~ ^/(data|config|\.ht|db_structure\.xml|README) {
+    deny all;
+  }
+
+  location / {
+    rewrite ^/.well-known/host-meta      /public.php?service=host-meta last;
+    rewrite ^/.well-known/host-meta.json /public.php?service=host-meta-json last;
+
+    rewrite ^/.well-known/carddav /remote.php/carddav/ redirect;
+    rewrite ^/.well-known/caldav  /remote.php/caldav/  redirect;
+
+    rewrite ^(/core/doc/[^\/]+/)$ $1/index.html;
+
+    try_files $uri $uri/ index.php;
+  }
+
+  location ~ ^(.+?\.php)(/.*)?$ {
+    try_files $1 = 404;
+    include fastcgi_params;
+    fastcgi_param SCRIPT_FILENAME $document_root$1;
+    fastcgi_param PATH_INFO $2;
+    fastcgi_param HTTPS on;
+    fastcgi_pass  unix:/run/php-fpm/php-fpm.sock;
+    fastcgi_index index.php;
+  }
+
+}

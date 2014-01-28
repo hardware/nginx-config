@@ -1,0 +1,30 @@
+server {
+    server_name     gitlist.domain.tld;
+    index           index.php;
+    root            /var/www/gitlist;
+
+    auth_basic "Restricted area";
+    auth_basic_user_file /etc/nginx/passwd;
+
+    location ~* ^/index.php.*$ {
+	include /etc/nginx/fastcgi_params;
+	fastcgi_pass unix:/var/run/php5-fpm.sock;
+	fastcgi_index index.php;
+    }
+
+    location / {
+	try_files $uri @gitlist;
+    }
+
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico)$ {
+	add_header Vary "Accept-Encoding";
+	expires max;
+	try_files $uri @gitlist;
+	tcp_nodelay off;
+	tcp_nopush on;
+    }
+
+    location @gitlist {
+	rewrite ^/.*$ /index.php;
+    }
+}

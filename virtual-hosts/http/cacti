@@ -1,0 +1,15 @@
+server {
+   server_name     cacti.domain.tld;
+   root            /var/www/cacti;
+   index           index.php;
+ 
+   location / {
+      try_files $uri $uri/ index.php/;
+   }
+ 
+   location ~ \.php$ {
+      include /etc/nginx/fastcgi_params;
+      fastcgi_pass unix:/var/run/php5-fpm.sock;
+      fastcgi_index index.php;
+   }
+}
